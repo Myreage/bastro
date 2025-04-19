@@ -1,4 +1,9 @@
-import http, { IncomingMessage, RequestListener, ServerResponse } from "http";
+import {
+  createServer as createHttpServer,
+  IncomingMessage,
+  RequestListener,
+  ServerResponse,
+} from "http";
 
 type RequestMethod = "get" | "post";
 type Request = {
@@ -13,7 +18,7 @@ type Response = {
 
 type Handler = (req: Request, res: Response) => void;
 
-type Server = {
+export type Server = {
   port: number;
   hostname: string;
   start: () => void;
@@ -21,9 +26,6 @@ type Server = {
   addHandler: (handler: Handler) => void;
   addNotFoundHandler: (handler: Handler) => void;
 };
-
-const PORT = 8000;
-const HOST = "127.0.0.1";
 
 const mapMethod = (method: string | undefined): RequestMethod | undefined => {
   if (method === "GET") {
@@ -62,7 +64,7 @@ const mapResponse = (res: ServerResponse): Response | undefined => {
 };
 
 const createServer = (port: number, hostname: string): Server => {
-  const server = http.createServer();
+  const server = createHttpServer();
   const handledUrls: string[] = [];
 
   const defaultNotFoundHandler: RequestListener = (req, res) => {
@@ -132,7 +134,10 @@ const createServer = (port: number, hostname: string): Server => {
     });
   };
 
-  const start = () => server.listen(port, hostname);
+  const start = () =>
+    server.listen(port, hostname, () =>
+      console.log(`Server listening on http://${hostname}:${port}`),
+    );
 
   return {
     port,
@@ -144,25 +149,4 @@ const createServer = (port: number, hostname: string): Server => {
   };
 };
 
-const server = createServer(PORT, HOST);
-
-server.addHandler((req) => {
-  console.log(req.method.toUpperCase() + " " + req.url);
-});
-
-server.addRoute("get", "/", (_req, res) => {
-  res.send(
-    200,
-    "<h1>Bienvenue sur le site!!!</h1><p>Ici plein de trucs cools en vrai</p>",
-  );
-});
-
-server.addRoute("get", "/about", (_req, res) => {
-  res.send(200, "<h1>About me</h1><p>Je suis un chill guy</p>");
-});
-
-server.addNotFoundHandler((_req, res) => {
-  res.send(404, "<h1>Page not found</h1>");
-});
-
-server.start();
+export { createServer };
