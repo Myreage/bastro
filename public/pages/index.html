@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="styles/global.css" />
+    <title>Home</title>
+  </head>
+  <body>
+    <h1>Home</h1>
+    <p id="quote"></p>
+    <p>Bienvenue sur mon blog test</p>
+    <p>Allez donc faire faire un tour sur <a href="/blog">mon blog</a></p>
+  </body>
+  <script>
+    const quotes = [
+      "Un pet, c’est l’âme qui soupire par derrière.",
+      "Mieux vaut péter en société que de garder le gaz et perdre l’amitié.",
+      "Le silence est d’or… sauf quand il précède un pet suspect.",
+      "Les pets sont les battements de tambour du ventre en rébellion.",
+      "Un pet discret est une œuvre d’art. Un pet bruyant, une déclaration de guerre.",
+    ];
+
+    const randomIndex = Math.floor(Math.random() * 4);
+    document.getElementById("quote").innerHTML =
+      `<em>~ ${quotes[randomIndex]} ~</em>`;
+  </script>
+</html>

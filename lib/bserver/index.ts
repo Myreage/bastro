@@ -57,7 +57,7 @@ const mapRequest = (req: IncomingMessage): Request | undefined => {
 const mapResponse = (res: ServerResponse): Response | undefined => {
   return {
     send: (code, content) => {
-      res.writeHead(code, { "content-type": "text/html" });
+      res.writeHead(code);
       res.end(content);
     },
   };

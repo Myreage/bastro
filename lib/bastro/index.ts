@@ -1,5 +1,5 @@
-import { readdirSync, readFile, readFileSync, statSync } from "fs";
-import { Server } from "../bserver";
+import { readdirSync, readFileSync, statSync } from "fs";
+import { createServer, Server } from "../bserver";
 
 const listAllFiles = (folderPath: string): string[] => {
   const items = readdirSync(folderPath);
@@ -19,29 +19,64 @@ const buildRegex = (folderPath: string): RegExp => {
   return new RegExp(`^${escaped}(?:/(.*?))?/([^/]+)$`);
 };
 
-export const routeFolder = (
-  server: Server,
-  rootUrl: string,
-  folderPath: string,
-) => {
-  const allFiles = listAllFiles(folderPath);
+type BastroApp = Server & {
+  routeFolder: (rootUrl: string, folderPath: string) => void;
+  serveFolder: (rootUrl: string, folderPath: string) => void;
+};
+export const createBastroApp = (port: number): BastroApp => {
+  const server = createServer(port, "localhost");
 
-  allFiles.forEach((file) => {
-    const regex = buildRegex(folderPath);
+  const routeFolder = (rootUrl: string, folderPath: string) => {
+    const allFiles = listAllFiles(folderPath);
 
-    const match = file.match(regex);
-    const baseUrl = match[1] ?? "";
-    const fileName = match[2] ?? "";
+    allFiles.forEach((file) => {
+      const regex = buildRegex(folderPath);
 
-    const endUrl =
-      fileName === "index.html" ? "" : "/" + fileName.split(".")[0];
+      const match = file.match(regex);
+      const baseUrl = match[1] ?? "";
+      const fileName = match[2] ?? "";
 
-    const url = baseUrl + endUrl;
-    const page = readFileSync(file, "utf8");
+      const endUrl =
+        fileName === "index.html" ? "" : "/" + fileName.split(".")[0];
 
-    const route = rootUrl + url;
-    server.addRoute("get", route, (_req, res) => {
-      res.send(200, page);
+      const url = baseUrl + endUrl;
+
+      const route = rootUrl + url;
+      server.addRoute("get", route, (_req, res) => {
+        const page = readFileSync(file, "utf8");
+        res.send(200, page);
+      });
     });
-  });
+  };
+
+  const serveFolder = (rootUrl: string, folderPath: string) => {
+    const allFiles = listAllFiles(folderPath);
+
+    allFiles.forEach((file) => {
+      const regex = buildRegex(folderPath);
+
+      const match = file.match(regex);
+      const baseUrl = match[1] ?? "";
+      const fileName = match[2] ?? "";
+
+      const routeComponents = [
+        rootUrl.replace(/\/$/, ""),
+        baseUrl,
+        fileName,
+      ].filter((component) => component);
+
+      const route = routeComponents.join("/");
+
+      server.addRoute("get", route, (_req, res) => {
+        const page = readFileSync(file, "utf8");
+        res.send(200, page);
+      });
+    });
+  };
+
+  return {
+    ...server,
+    routeFolder,
+    serveFolder,
+  };
 };
